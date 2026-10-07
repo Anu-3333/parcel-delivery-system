@@ -10,4 +10,5 @@ python-dotenv
 email-validator
 python-multipart
 websockets
-requestspsycopg[binary]
+requests
+psycopg[binary]
