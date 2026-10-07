@@ -38,9 +38,7 @@ function Register() {
 
     // Password length
     if (form.password.length < 6) {
-      setError(
-        "Password must contain at least 6 characters."
-      );
+      setError("Password must contain at least 6 characters.");
       return;
     }
 
@@ -50,17 +48,23 @@ function Register() {
       const response = await axios.post(
         "https://parcel-delivery-system-39oz.onrender.com/auth/register",
         {
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
+          name: form.name.trim(),
+          email: form.email.trim(),
+          phone: form.phone.trim(),
           password: form.password,
           role: "user",
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
       );
 
+      console.log("Registration response:", response.data);
+
       setSuccess(
-        response.data.message ||
-          "Registration successful!"
+        response.data?.message || "Registration successful!"
       );
 
       setForm({
@@ -71,21 +75,61 @@ function Register() {
         confirmPassword: "",
       });
 
-      // Login page ki redirect
+      // Redirect to Login page
       setTimeout(() => {
         navigate("/login");
       }, 2000);
 
     } catch (error) {
-      console.error(
-        "Registration error:",
-        error
-      );
+      console.error("Registration error:", error);
 
-      setError(
-        error.response?.data?.detail ||
-          "Registration failed. Please try again."
-      );
+      // Backend response error
+      if (error.response) {
+        console.error(
+          "Backend status:",
+          error.response.status
+        );
+
+        console.error(
+          "Backend response:",
+          error.response.data
+        );
+
+        const backendError = error.response.data?.detail;
+
+        if (Array.isArray(backendError)) {
+          setError(
+            backendError
+              .map((item) => item.msg || "Invalid input")
+              .join(", ")
+          );
+        } else {
+          setError(
+            backendError ||
+              `Registration failed. Server returned ${error.response.status}.`
+          );
+        }
+      }
+
+      // Request was sent but no response received
+      else if (error.request) {
+        console.error(
+          "No response received from backend:",
+          error.request
+        );
+
+        setError(
+          "Unable to connect to the server. Please check your internet connection and try again."
+        );
+      }
+
+      // Other error
+      else {
+        setError(
+          error.message ||
+            "Registration failed. Please try again."
+        );
+      }
     } finally {
       setLoading(false);
     }
@@ -109,8 +153,7 @@ function Register() {
           backgroundColor: "white",
           padding: "35px",
           borderRadius: "14px",
-          boxShadow:
-            "0 5px 20px rgba(0,0,0,0.1)",
+          boxShadow: "0 5px 20px rgba(0,0,0,0.1)",
         }}
       >
 
@@ -289,17 +332,14 @@ function Register() {
 
         <button
           type="button"
-          onClick={() =>
-            navigate("/login")
-          }
+          onClick={() => navigate("/login")}
           style={{
             width: "100%",
             padding: "12px",
             marginTop: "15px",
             backgroundColor: "white",
             color: "#2563eb",
-            border:
-              "1px solid #2563eb",
+            border: "1px solid #2563eb",
             borderRadius: "7px",
             cursor: "pointer",
             fontSize: "14px",
@@ -325,8 +365,7 @@ const inputStyle = {
   width: "100%",
   padding: "12px",
   marginBottom: "17px",
-  border:
-    "1px solid #cbd5e1",
+  border: "1px solid #cbd5e1",
   borderRadius: "7px",
   boxSizing: "border-box",
   fontSize: "14px",
