@@ -20,11 +20,11 @@ function Login() {
     try {
       const formData = new URLSearchParams();
 
-      formData.append("username", email);
+      formData.append("username", email.trim());
       formData.append("password", password);
 
       const response = await axios.post(
-        "http://127.0.0.1:8000/auth/login",
+        "https://parcel-delivery-system-39oz.onrender.com/auth/login",
         formData,
         {
           headers: {
@@ -34,6 +34,9 @@ function Login() {
         }
       );
 
+      console.log("Login successful:", response.data);
+
+      // Save login information
       localStorage.setItem(
         "token",
         response.data.access_token
@@ -49,6 +52,7 @@ function Login() {
         response.data.user_id
       );
 
+      // Navigate based on role
       if (response.data.role === "admin") {
         navigate("/admin");
       } else if (
@@ -60,19 +64,50 @@ function Login() {
       }
 
     } catch (error) {
-      console.error(
-        "Login Error:",
-        error
-      );
+      console.error("Login Error:", error);
 
       if (error.response) {
+        console.error(
+          "Backend Status:",
+          error.response.status
+        );
+
+        console.error(
+          "Backend Response:",
+          error.response.data
+        );
+
+        const backendError =
+          error.response.data?.detail;
+
+        if (Array.isArray(backendError)) {
+          setErrorMessage(
+            backendError
+              .map(
+                (item) =>
+                  item.msg || "Invalid input"
+              )
+              .join(", ")
+          );
+        } else {
+          setErrorMessage(
+            backendError ||
+              `Login failed. Server returned ${error.response.status}.`
+          );
+        }
+      } else if (error.request) {
+        console.error(
+          "No response received from backend:",
+          error.request
+        );
+
         setErrorMessage(
-          error.response.data?.detail ||
-            "Invalid email or password."
+          "Unable to connect to the server. Please check your internet connection and try again."
         );
       } else {
         setErrorMessage(
-          "Cannot connect to backend."
+          error.message ||
+            "Login failed. Please try again."
         );
       }
 
@@ -103,6 +138,7 @@ function Login() {
             "0 5px 20px rgba(0,0,0,0.1)",
         }}
       >
+
         {/* Header */}
 
         <h1
