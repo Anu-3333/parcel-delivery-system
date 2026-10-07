@@ -69,15 +69,23 @@ function Payment() {
     const token =
       localStorage.getItem("token");
 
+    if (!token) {
+      setError(
+        "Your login session has expired. Please login again."
+      );
+      setLoading(false);
+      return;
+    }
+
     try {
       // Demo payment processing
       await new Promise((resolve) =>
         setTimeout(resolve, 1500)
       );
 
-      // Create parcel in backend
+      // Create parcel in live backend
       const response = await axios.post(
-        "http://127.0.0.1:8000/parcels/book",
+        "https://parcel-delivery-system-39oz.onrender.com/parcels/book",
         {
           receiver_name:
             parcel.receiver_name,
@@ -104,8 +112,15 @@ function Payment() {
           headers: {
             Authorization:
               `Bearer ${token}`,
+            "Content-Type":
+              "application/json",
           },
         }
+      );
+
+      console.log(
+        "Parcel booking response:",
+        response.data
       );
 
       // Remove temporary parcel data
@@ -127,10 +142,54 @@ function Payment() {
         error
       );
 
-      setError(
-        error.response?.data?.detail ||
-          "Payment failed. Please try again."
-      );
+      if (error.response) {
+        console.error(
+          "Backend status:",
+          error.response.status
+        );
+
+        console.error(
+          "Backend response:",
+          error.response.data
+        );
+
+        const backendError =
+          error.response.data?.detail;
+
+        if (Array.isArray(backendError)) {
+          setError(
+            backendError
+              .map(
+                (item) =>
+                  item.msg ||
+                  "Invalid parcel information"
+              )
+              .join(", ")
+          );
+        } else {
+          setError(
+            backendError ||
+              `Payment failed. Server returned ${error.response.status}.`
+          );
+        }
+
+      } else if (error.request) {
+        console.error(
+          "No response received from backend:",
+          error.request
+        );
+
+        setError(
+          "Unable to connect to the server. Please check your internet connection and try again."
+        );
+
+      } else {
+        setError(
+          error.message ||
+            "Payment failed. Please try again."
+        );
+      }
+
     } finally {
       setLoading(false);
     }
@@ -357,10 +416,7 @@ function Payment() {
             }}
           >
 
-            {/* ========================= */}
             {/* UPI */}
-            {/* ========================= */}
-
             <div>
               <div
                 onClick={() =>
@@ -370,9 +426,11 @@ function Payment() {
                   paymentMethod === "UPI"
                 )}
               >
-                <div style={radioCircleStyle(
-                  paymentMethod === "UPI"
-                )}>
+                <div
+                  style={radioCircleStyle(
+                    paymentMethod === "UPI"
+                  )}
+                >
                   {paymentMethod === "UPI" && (
                     <div
                       style={radioInnerStyle}
@@ -556,9 +614,7 @@ function Payment() {
                         </span>
                       </div>
 
-                      <span
-                        style={upiAppNameStyle}
-                      >
+                      <span style={upiAppNameStyle}>
                         Paytm
                       </span>
 
@@ -579,10 +635,7 @@ function Payment() {
               )}
             </div>
 
-            {/* ========================= */}
             {/* CARD */}
-            {/* ========================= */}
-
             <div
               onClick={() =>
                 handlePaymentMethod("Card")
@@ -591,9 +644,11 @@ function Payment() {
                 paymentMethod === "Card"
               )}
             >
-              <div style={radioCircleStyle(
-                paymentMethod === "Card"
-              )}>
+              <div
+                style={radioCircleStyle(
+                  paymentMethod === "Card"
+                )}
+              >
                 {paymentMethod === "Card" && (
                   <div
                     style={radioInnerStyle}
@@ -630,10 +685,7 @@ function Payment() {
               )}
             </div>
 
-            {/* ========================= */}
             {/* NET BANKING */}
-            {/* ========================= */}
-
             <div
               onClick={() =>
                 handlePaymentMethod(
@@ -645,10 +697,12 @@ function Payment() {
                   "Net Banking"
               )}
             >
-              <div style={radioCircleStyle(
-                paymentMethod ===
-                  "Net Banking"
-              )}>
+              <div
+                style={radioCircleStyle(
+                  paymentMethod ===
+                    "Net Banking"
+                )}
+              >
                 {paymentMethod ===
                   "Net Banking" && (
                   <div
