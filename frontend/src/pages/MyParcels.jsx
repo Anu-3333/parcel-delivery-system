@@ -35,7 +35,7 @@ function MyParcels() {
 
       try {
         const response = await axios.get(
-          "http://127.0.0.1:8000/parcels/my-parcels",
+          "https://parcel-delivery-system-39oz.onrender.com/parcels/my-parcels",
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -84,7 +84,7 @@ function MyParcels() {
 
     parcels.forEach((parcel) => {
       const socket = new WebSocket(
-        `ws://127.0.0.1:8000/ws/tracking/${parcel.id}`
+        `wss://parcel-delivery-system-39oz.onrender.com/ws/tracking/${parcel.id}`
       );
 
       socket.onopen = () => {
